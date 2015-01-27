@@ -13,11 +13,11 @@ void native_jniCheckAPP(JNIEnv* env, jobject thiz);
 #define TEST_HASH_CODE 1
 
 static JNINativeMethod methods[] = {
-	{
-		"jniCheckAPP",
-		"()V",
-		(void*) native_jniCheckAPP
-	}
+    {
+        "jniCheckAPP",
+        "()V",
+        (void*) native_jniCheckAPP
+    }
 };
 
 static const char *classPathName = "com/example/hellojni/HelloJni";
@@ -112,163 +112,163 @@ jvalue JNU_CallMethodByName(JNIEnv *env, jobject obj,
 }
 
 jobject getSignature(JNIEnv* env, jobject thiz){
-	//获取包名
+    //获取包名
     jstring jstr_packageName = (jstring) JNU_CallMethodByName(env,
             thiz, "getPackageName", "()Ljava/lang/String;").l;
 
-   	if ((*env)->ExceptionCheck(env) || jstr_packageName == NULL) {
-    	LOGI("can't get jstr of getPackageName");
+    if ((*env)->ExceptionCheck(env) || jstr_packageName == NULL) {
+        LOGI("can't get jstr of getPackageName");
         return NULL;
-   	}
+    }
 
-   	//获取包名的字符串
-   	const char* loc_str_app_packageName = (*env)->GetStringUTFChars(env,
+    //获取包名的字符串
+    const char* loc_str_app_packageName = (*env)->GetStringUTFChars(env,
            jstr_packageName, NULL);
-   	if (loc_str_app_packageName == NULL) {
-       	LOGI("can't get packagename from jstring");
-       	return NULL;
-   	}
-   	//当前应用包名与合法包名对比
-   	if (strcmp(loc_str_app_packageName, global_app_packageName) != 0) {
-       	LOGI("this app is illegal");
-       	return NULL;
-   	}
+    if (loc_str_app_packageName == NULL) {
+        LOGI("can't get packagename from jstring");
+        return NULL;
+    }
+    //当前应用包名与合法包名对比
+    if (strcmp(loc_str_app_packageName, global_app_packageName) != 0) {
+        LOGI("this app is illegal");
+        return NULL;
+    }
 
-   	//释放loc_str_app_packageName
-   	(*env)->ReleaseStringUTFChars(env, jstr_packageName,
+    //释放loc_str_app_packageName
+    (*env)->ReleaseStringUTFChars(env, jstr_packageName,
            loc_str_app_packageName);
 
-   	// 获得应用包的管理器
-   	jobject package_manager = JNU_CallMethodByName(env, thiz,
+    // 获得应用包的管理器
+    jobject package_manager = JNU_CallMethodByName(env, thiz,
            "getPackageManager", "()Landroid/content/pm/PackageManager;").l;
-   	if ((*env)->ExceptionCheck(env) || package_manager == NULL) {
-       	LOGI("can't get obj of getPackageManager");
-       	return NULL;
-   	}
+    if ((*env)->ExceptionCheck(env) || package_manager == NULL) {
+        LOGI("can't get obj of getPackageManager");
+        return NULL;
+    }
 
-   	// 获得应用包的信息
-   	jobject package_info = JNU_CallMethodByName(env,
-           	package_manager, "getPackageInfo",
-           	"(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;",
-           	(*env)->NewStringUTF(env, global_app_packageName), 64).l;
-   	if ((*env)->ExceptionCheck(env) || package_info == NULL) {
-       	(*env)->ExceptionClear(env);
-       	LOGI("can't get obj of package_info");
-       	return NULL;
-   	}
+    // 获得应用包的信息
+    jobject package_info = JNU_CallMethodByName(env,
+            package_manager, "getPackageInfo",
+            "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;",
+            (*env)->NewStringUTF(env, global_app_packageName), 64).l;
+    if ((*env)->ExceptionCheck(env) || package_info == NULL) {
+        (*env)->ExceptionClear(env);
+        LOGI("can't get obj of package_info");
+        return NULL;
+    }
 
-   	// 获得 PackageInfo 类
-   	jclass pi_clazz = (*env)->GetObjectClass(env, package_info);
+    // 获得 PackageInfo 类
+    jclass pi_clazz = (*env)->GetObjectClass(env, package_info);
 
-   	// 获得签名数组属性的 ID
-   	jfieldID fieldID_signatures = (*env)->GetFieldID(env, pi_clazz,
+    // 获得签名数组属性的 ID
+    jfieldID fieldID_signatures = (*env)->GetFieldID(env, pi_clazz,
            "signatures", "[Landroid/content/pm/Signature;");
-   	(*env)->DeleteLocalRef(env, pi_clazz);
-   	// 得到签名数组，待修改
-   	jobjectArray signatures = (*env)->GetObjectField(env, package_info,
+    (*env)->DeleteLocalRef(env, pi_clazz);
+    // 得到签名数组，待修改
+    jobjectArray signatures = (*env)->GetObjectField(env, package_info,
            fieldID_signatures);
 
-   	if ((*env)->ExceptionCheck(env) || signatures == NULL) {
+    if ((*env)->ExceptionCheck(env) || signatures == NULL) {
        LOGI("can't get jobjectArray of signatures");
        return NULL;
-   	}
+    }
 
-   	// 得到签名
-   	jobject signature = (*env)->GetObjectArrayElement(env, signatures, 0);
-   	if ((*env)->ExceptionCheck(env) || signature == NULL) {
-       	LOGI("can't get obj of signature");
-       	return NULL;
-   	}
+    // 得到签名
+    jobject signature = (*env)->GetObjectArrayElement(env, signatures, 0);
+    if ((*env)->ExceptionCheck(env) || signature == NULL) {
+        LOGI("can't get obj of signature");
+        return NULL;
+    }
 
    return signature;
 }
 
 jobject getPublicKey(JNIEnv* env, jobject signature){
-	// 获得 Signature 类
-	jclass Signature = (*env)->GetObjectClass(env, signature);
+    // 获得 Signature 类
+    jclass Signature = (*env)->GetObjectClass(env, signature);
 
-	//实例化证书
-	//相当于: CertificateFactory.getInstance("X.509")
-	jclass CertificateFactory = (*env)->FindClass(env, "java/security/cert/CertificateFactory");
-	jmethodID certId = (*env)->GetStaticMethodID(env, CertificateFactory,
-			"getInstance", "(Ljava/lang/String;)Ljava/security/cert/CertificateFactory;");
-	jobject cf = (*env)->CallStaticObjectMethod(env, CertificateFactory,
-			certId, (*env)->NewStringUTF(env, "X.509"));
-	if ((*env)->ExceptionCheck(env) || cf == NULL) {
+    //实例化证书
+    //相当于: CertificateFactory.getInstance("X.509")
+    jclass CertificateFactory = (*env)->FindClass(env, "java/security/cert/CertificateFactory");
+    jmethodID certId = (*env)->GetStaticMethodID(env, CertificateFactory,
+            "getInstance", "(Ljava/lang/String;)Ljava/security/cert/CertificateFactory;");
+    jobject cf = (*env)->CallStaticObjectMethod(env, CertificateFactory,
+            certId, (*env)->NewStringUTF(env, "X.509"));
+    if ((*env)->ExceptionCheck(env) || cf == NULL) {
        LOGI("can't get obj of certificate");
        return NULL;
-   	}
-	//签名的byteArray
-	//相当于：signs[0].toByteArray()
-	jmethodID getSignByteArrayID = (*env)->GetMethodID(env, Signature, "toByteArray", "()[B");
-	jbyteArray signByteArray = (*env)->CallObjectMethod(env, signature, getSignByteArrayID);
-	if ((*env)->ExceptionCheck(env) || signByteArray == NULL) {
+    }
+    //签名的byteArray
+    //相当于：signs[0].toByteArray()
+    jmethodID getSignByteArrayID = (*env)->GetMethodID(env, Signature, "toByteArray", "()[B");
+    jbyteArray signByteArray = (*env)->CallObjectMethod(env, signature, getSignByteArrayID);
+    if ((*env)->ExceptionCheck(env) || signByteArray == NULL) {
        LOGI("can't get jbyteArray of signByteArray");
        return NULL;
-   	}
+    }
 
-	//new ByteArrayInputStream(signs[0].toByteArray())
-	jclass ByteArrayInputStream = (*env)->FindClass(env, "java/io/ByteArrayInputStream");
- 	jmethodID BAIS_INIT_ID = (*env)->GetMethodID(env, ByteArrayInputStream, "<init>", "([B)V");  
+    //new ByteArrayInputStream(signs[0].toByteArray())
+    jclass ByteArrayInputStream = (*env)->FindClass(env, "java/io/ByteArrayInputStream");
+    jmethodID BAIS_INIT_ID = (*env)->GetMethodID(env, ByteArrayInputStream, "<init>", "([B)V");  
     jobject bais = (*env)->NewObject(env, ByteArrayInputStream, BAIS_INIT_ID, signByteArray);  
     if ((*env)->ExceptionCheck(env) || bais == NULL) {
        LOGI("can't get obj of bais");
        return NULL;
-   	}
+    }
 
     // X509Certificate cert = (X509Certificate)cf.generateCertificate(bais)
-	jobject cert = JNU_CallMethodByName(env, cf, "generateCertificate", "(Ljava/io/InputStream;)Ljava/security/cert/Certificate;", bais).l;
-	if ((*env)->ExceptionCheck(env) || cert == NULL) {
+    jobject cert = JNU_CallMethodByName(env, cf, "generateCertificate", "(Ljava/io/InputStream;)Ljava/security/cert/Certificate;", bais).l;
+    if ((*env)->ExceptionCheck(env) || cert == NULL) {
        LOGI("can't get obj of cert");
        return NULL;
-   	}
+    }
 
-	//PublicKey key = cert.getPublicKey();
-	jobject publicKey = JNU_CallMethodByName(env, cert, "getPublicKey", "()Ljava/security/PublicKey;").l;
-	if ((*env)->ExceptionCheck(env) || publicKey == NULL) {
+    //PublicKey key = cert.getPublicKey();
+    jobject publicKey = JNU_CallMethodByName(env, cert, "getPublicKey", "()Ljava/security/PublicKey;").l;
+    if ((*env)->ExceptionCheck(env) || publicKey == NULL) {
        LOGI("can't get obj of publicKey");
        return NULL;
-   	}
+    }
 
-	return publicKey;
+    return publicKey;
 }
 
 int do_check_signature(JNIEnv* env, jobject thiz){
-	int equal = -1;
+    int equal = -1;
     jobject signature = getSignature(env, thiz);
     if(signature == NULL){
-    	return equal;
+        return equal;
     }
-	//PublicKey key 
-	jobject publicKey = getPublicKey(env, signature);
-	if(publicKey == NULL){
-		return equal;
-	}
+    //PublicKey key 
+    jobject publicKey = getPublicKey(env, signature);
+    if(publicKey == NULL){
+        return equal;
+    }
 
-	//BigInteger modulus = ((RSAPublicKey)key).getModulus().hashCode();
-	jobject modulus = JNU_CallMethodByName(env, publicKey, "getModulus", "()Ljava/math/BigInteger;").l;
-	//String strModulus = modulus.toString(10)
-	jstring strKey = (jstring)JNU_CallMethodByName(env, modulus, "toString", "(I)Ljava/lang/String;", 10).l;
+    //BigInteger modulus = ((RSAPublicKey)key).getModulus().hashCode();
+    jobject modulus = JNU_CallMethodByName(env, publicKey, "getModulus", "()Ljava/math/BigInteger;").l;
+    //String strModulus = modulus.toString(10)
+    jstring strKey = (jstring)JNU_CallMethodByName(env, modulus, "toString", "(I)Ljava/lang/String;", 10).l;
 
 #ifndef TEST_HASH_CODE
-	const char *nativeKeyString = (*env)->GetStringUTFChars(env, strKey, 0);
-	LOGI("this app publicKey of signature is %s", nativeKeyString);
+    const char *nativeKeyString = (*env)->GetStringUTFChars(env, strKey, 0);
+    LOGI("this app publicKey of signature is %s", nativeKeyString);
     equal = 0 == strncmp(nativeKeyString, global_app_signature_public_key, 1000);
-   	(*env)->ReleaseStringUTFChars(env, strKey, nativeKeyString);
+    (*env)->ReleaseStringUTFChars(env, strKey, nativeKeyString);
 #else
-   	int hash_code = (int)JNU_CallMethodByName(env, modulus, "hashCode", "()I").i;
-   	LOGI("this app hash_code of signature is %d", hash_code);
-   	equal = hash_code == global_app_signature_hash_code;
+    int hash_code = (int)JNU_CallMethodByName(env, modulus, "hashCode", "()I").i;
+    LOGI("this app hash_code of signature is %d", hash_code);
+    equal = hash_code == global_app_signature_hash_code;
 #endif
-	
-   	//合法返回1
+    
+    //合法返回1
     return equal == 1;
 }
 
 JNIEXPORT void native_jniCheckAPP(JNIEnv* env, jobject thiz) {
     LOGI("start jniCheckAPP");
     if(do_check_signature(env, thiz) != 1){
-    	JNU_CallMethodByName(env, thiz, "popAlarm", "()V");
+        JNU_CallMethodByName(env, thiz, "popAlarm", "()V");
     }
 }
 
@@ -309,7 +309,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     }
     env = uenv.env;
     if (registerNatives(env) != JNI_TRUE) {
-
         goto bail;
     }
     result = JNI_VERSION_1_4;
